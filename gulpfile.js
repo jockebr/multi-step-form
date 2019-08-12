@@ -213,11 +213,11 @@ gulp.task('copy:zip', gulp.series('clean:zip', 'build:production', function copy
         'screenshot-2.jpg',
         'uninstall.php'
       ], {base: '.'})
-    .pipe(gulp.dest('pkg/multi-step-form'));
+    .pipe(gulp.dest('pkg/multi-step-form-jbr'));
 }));
 
 gulp.task('zip', gulp.series('copy:zip', function zipPackage() {
-  return gulp.src('pkg/**/multi-step-form/**')
-    .pipe(zip('multi-step-form.zip'))
+  return gulp.src('pkg/**/multi-step-form-jbr/**')
+    .pipe(zip('multi-step-form-jbr.zip'))
     .pipe(gulp.dest('pkg'));
 }));

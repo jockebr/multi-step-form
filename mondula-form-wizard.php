@@ -1,10 +1,10 @@
 <?php
 /*
  * Plugin Name: Multi Step Form
- * Version: 1.5.3
+ * Version: 1.5.3-jbr
  * Plugin URI: http://www.mondula.com/
  * Description: Create and embed Multi Step Form.
- * Author: Mondula GmbH
+ * Author: jbr
  * Author URI: http://www.mondula.com/
  * Requires at least: 4.8
  * Tested up to: 5.2

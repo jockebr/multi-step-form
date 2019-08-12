@@ -96,38 +96,57 @@ jQuery(document).ready(function ($) {
 		enableNext($wizard);
 	}
 
-	function next() {
-		var $wizard = getWizard($(this));
-		var step = getStep($wizard);
-		var stepInt = parseInt(step, 10);
-		var $circle = $wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]');
-		var $bar = $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + step + '"]');
-		if (validateStep($wizard.find('.fw-current'))) {
-			$wizard.find('.fw-progress-step[data-id="' + step + '"]').addClass('fw-visited');
-			if (stepInt == 4) {
-				$wizard.find('.fw-progress-bar').addClass('fw-step-after-fifth');
-			}
-			$circle.removeClass('fwp-active').addClass('fwp-done');
-			$circle.find('.fwp-label').html('&#10003;');
-			$bar.addClass('fwp-active');
-			if (stepInt >= 1) {
-				$wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 1) + '"]')
-					.removeClass('fwp-active').addClass('fwp-done');
-			}
-			hideStep($wizard, step++);
-			showStep($wizard, step);
-			if (step === (getStepCount($wizard) - 1)) {
-				disableNext($wizard);
-			}
-			enablePrevious($wizard);
-			// scroll back to top on next step
-			$('html, body').animate({
-				scrollTop: $("#multi-step-form").offset().top - 100
-			}, 500);
-		}
-	}
+    function next() {
+        var $wizard = getWizard($(this));
+        var step = getStep($wizard);
+        var stepInt = parseInt(step, 10);
+        var $circle = $wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]');
+        var $bar = $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + step + '"]');
+        if (validateStep($wizard.find('.fw-current'))) {
+            $wizard.find('.fw-progress-step[data-id="' + step + '"]').addClass('fw-visited');
+            if (stepInt == 4) {
+                $wizard.find('.fw-progress-bar').addClass('fw-step-after-fifth');
+            }
+            $circle.removeClass('fwp-active').addClass('fwp-done');
+            $circle.find('.fwp-label').html('&#10003;');
+            $bar.addClass('fwp-active');
+            if (stepInt >= 1) {
+                $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 1) + '"]')
+                    .removeClass('fwp-active').addClass('fwp-done');
+            }
+            hideStep($wizard, step++);
+            showStep($wizard, step);
+            if (step === (getStepCount($wizard) - 1)) {
+                disableNext($wizard);
+            }
+            enablePrevious($wizard);
+            // scroll back to top on next step
+            $('html, body').animate({
+                scrollTop: $("#multi-step-form").offset().top - 100
+            }, 500);
+        }
+    }
 
-	function escapeHtml(str : any) : string {
+    function setStep() {
+        var $wizard = getWizard($(this));
+        var step = getStep($wizard);
+        hideStep($wizard, step);
+
+        var wantedStep = $(this).attr('data-id');
+        var wantedStepInt = parseInt(step, 10);
+        showStep($wizard, wantedStep);
+
+        if (wantedStepInt === (getStepCount($wizard) - 1)) {
+            disableNext($wizard);
+            enablePrevious($wizard);
+        }
+        if (wantedStepInt === 0) {
+            enableNext($wizard);
+            disablePrevious($wizard);
+        }
+    }
+
+    function escapeHtml(str: any): string {
 		return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 	}
 
@@ -1157,7 +1176,9 @@ jQuery(document).ready(function ($) {
 		$('.fw-progress-step[data-id="0"]').addClass('fw-active');
 		$('.fw-button-previous').hide(); // prop('disabled', true);
 		$('.fw-button-previous').click(previous);
-		$('.fw-button-next').click(next);
+        $('.fw-button-next').click(next);
+
+        $('ul.fw-progress-bar li').click(setStep);
 
 		var showSummary = $('.fw-wizard-summary').attr('data-showsummary');
 		if (showSummary == 'off') {
