@@ -4,7 +4,7 @@
  * Version: 1.5.3-jbr
  * Plugin URI: http://www.mondula.com/
  * Description: Create and embed Multi Step Form.
- * Author: jbr
+ * Author: Mondula GmbH
  * Author URI: http://www.mondula.com/
  * Requires at least: 4.8
  * Tested up to: 5.2
