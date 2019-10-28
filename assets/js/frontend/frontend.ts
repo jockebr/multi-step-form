@@ -69,26 +69,26 @@ jQuery(document).ready(function ($) {
 	function previous() {
 		var $wizard = getWizard($(this));
 		var step = getStep($wizard);
-		//var stepInt = parseInt(step, 10);
-		//var $circle = $wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]');
-		//var $bar = $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 1) + '"]');
-		//var $progress = $wizard.find('.fw-progress-step[data-id="' + (stepInt - 1) + '"]');
-		//$progress.removeClass('fw-visited');
-		//$wizard.find('.fw-progress-step[data-id="' + step + '"]').removeClass('fw-visited');
-		//$circle.removeClass('fwp-done');
-		//if (stepInt == 5) {
-		//	$wizard.find('.fw-progress-bar').removeClass('fw-step-after-fifth')
-		//}
-		//$circle.find('.fwp-label').html(parseInt(step, 10) + 1);
-		//$bar.removeClass('fwp-active');
-		//if (stepInt >= 2) {
-		//	$wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 2) + '"]')
-		//		.removeClass('fwp-done').addClass('fwp-active');
+		var stepInt = parseInt(step, 10);
+		var $circle = $wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]');
+		var $bar = $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 1) + '"]');
+		var $progress = $wizard.find('.fw-progress-step[data-id="' + (stepInt - 1) + '"]');
+		$progress.removeClass('fw-visited');
+		$wizard.find('.fw-progress-step[data-id="' + step + '"]').removeClass('fw-visited');
+		$circle.removeClass('fwp-done');
+		if (stepInt == 5) {
+			$wizard.find('.fw-progress-bar').removeClass('fw-step-after-fifth')
+		}
+		$circle.find('.fwp-label').html(parseInt(step, 10) + 1);
+		$bar.removeClass('fwp-active');
+		if (stepInt >= 2) {
+			$wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 2) + '"]')
+				.removeClass('fwp-done').addClass('fwp-active');
 
-		//}
+		}
 		hideStep($wizard, step--);
-		//$wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]')
-		//	.find('.fwp-label').html(parseInt(step, 10) + 1);
+		$wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]')
+			.find('.fwp-label').html(parseInt(step, 10) + 1);
 		showStep($wizard, step);
 		if (step === 0) {
 			disablePrevious($wizard);
@@ -99,21 +99,21 @@ jQuery(document).ready(function ($) {
     function next() {
         var $wizard = getWizard($(this));
         var step = getStep($wizard);
-        //var stepInt = parseInt(step, 10);
-        //var $circle = $wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]');
-        //var $bar = $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + step + '"]');
+        var stepInt = parseInt(step, 10);
+        var $circle = $wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + step + '"]');
+        var $bar = $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + step + '"]');
         if (validateStep($wizard.find('.fw-current'))) {
-            //$wizard.find('.fw-progress-step[data-id="' + step + '"]').addClass('fw-visited');
-            //if (stepInt == 4) {
-            //    $wizard.find('.fw-progress-bar').addClass('fw-step-after-fifth');
-            //}
-            //$circle.removeClass('fwp-active').addClass('fwp-done');
-            //$circle.find('.fwp-label').html('&#10003;');
-            //$bar.addClass('fwp-active');
-            //if (stepInt >= 1) {
-            //    $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 1) + '"]')
-            //        .removeClass('fwp-active').addClass('fwp-done');
-            //}
+            $wizard.find('.fw-progress-step[data-id="' + step + '"]').addClass('fw-visited');
+            if (stepInt == 4) {
+               $wizard.find('.fw-progress-bar').addClass('fw-step-after-fifth');
+            }
+            $circle.removeClass('fwp-active').addClass('fwp-done');
+            $circle.find('.fwp-label').html('&#10003;');
+            $bar.addClass('fwp-active');
+            if (stepInt >= 1) {
+               $wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + (stepInt - 1) + '"]')
+                   .removeClass('fwp-active').addClass('fwp-done');
+            }
             hideStep($wizard, step++);
             showStep($wizard, step);
             if (step === (getStepCount($wizard) - 1)) {
@@ -133,17 +133,24 @@ jQuery(document).ready(function ($) {
         hideStep($wizard, step);
 
         var wantedStep = $(this).attr('data-id');
-        var wantedStepInt = parseInt(step, 10);
+        var wantedStepInt = parseInt(wantedStep, 10);
         showStep($wizard, wantedStep);
 
-        if (wantedStepInt === (getStepCount($wizard) - 1)) {
-            disableNext($wizard);
-            enablePrevious($wizard);
-        }
-        if (wantedStepInt === 0) {
-            enableNext($wizard);
-            disablePrevious($wizard);
-        }
+		enableNext($wizard);
+		enablePrevious($wizard);
+        if (wantedStepInt === 0) { disablePrevious($wizard); }
+        if (wantedStepInt === (getStepCount($wizard) - 1)) { disableNext($wizard); }
+		
+		for (let i = 0; i < wantedStepInt; i++) {
+			$wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + i + '"]').addClass('fwp-active').addClass('fwp-done');
+			$wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + i + '"]').addClass('fwp-active').addClass('fwp-done');
+			$wizard.find('.fw-progress-step[data-id="' + i + '"]').addClass('fw-visited');
+		}
+		for (let i = wantedStepInt; i < getStepCount($wizard); i++) {
+			$wizard.find('.fwp-progress-bar .fwp-bar[data-id="' + i + '"]').removeClass('fwp-active').removeClass('fwp-done');
+			$wizard.find('.fwp-progress-bar .fwp-circle[data-id="' + i + '"]').removeClass('fwp-active').removeClass('fwp-done');
+			$wizard.find('.fw-progress-step[data-id="' + i + '"]').removeClass('fw-visited');
+		}
     }
 
     function escapeHtml(str: any): string {
