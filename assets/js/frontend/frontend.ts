@@ -9,6 +9,10 @@ jQuery(document).ready(function ($) {
 
 	let data = {};
 
+	let captchaId : any = null;
+	let useCaptcha : boolean = false;
+	let invisibleCaptcha : boolean = false;
+
 	const logStyle = "color: white; background-color: purple; padding: 3px; display: block; line-height: 25px; border-radius: 2px;";
 
 	/**
@@ -158,15 +162,22 @@ jQuery(document).ready(function ($) {
 	}
 
 	function textSummary(summaryObj, $block, title, required) {
-		var header = $block.find('h3').text();
-		var value = $block.find('.fw-text-input').val().trim();
+		const header = $block.find('h3').text();
+		let value = $block.find('.fw-text-input').val().trim();
+		value = escapeHtml(value);
+		pushToSummary(summaryObj, title, header, value, required);
+	}
+
+	function hiddenSummary(summaryObj, $block, title, required) {
+		const header = $block.data('label');
+		let value = $block.find('.fw-text-input').val().trim();
 		value = escapeHtml(value);
 		pushToSummary(summaryObj, title, header, value, required);
 	}
 
 	function textareaSummary(summaryObj, $block, title, required) {
-		var header = $block.find('h3').text();
-		var value = $block.find('.fw-textarea').val().trim();
+		const header = $block.find('h3').text();
+		let value = $block.find('.fw-textarea').val().trim();
 		value = escapeHtml(value);
 		value = value.replace(/\n/g, "<br/>\n");
 		pushToSummary(summaryObj, title, header, value, required);
@@ -253,6 +264,10 @@ jQuery(document).ready(function ($) {
 				break;
 			case 'fw-registration':
 				registrationSummary(summaryObj, $block, title, required);
+				break;
+			case 'fw-get-variable':
+				hiddenSummary(summaryObj, $block, title, required);
+				break;
 			default:
 				break;
 		}
@@ -582,6 +597,14 @@ jQuery(document).ready(function ($) {
 		}
 	}
 
+	function validateGetVariable($element) {
+		if (!$element.find('.fw-text-input').val()) {
+			$element.addClass('fw-block-invalid');
+			return false;
+		}
+		return true;
+	}
+
 	function validateNumeric($element) {
 		var re = /^-?\d+$/;
 		var numeric = $element.find('.fw-text-input').val();
@@ -714,6 +737,9 @@ jQuery(document).ready(function ($) {
 						break;
 					case 'fw-email':
 						valid = validateEmail($element);
+						break;
+					case 'fw-get-variable':
+						valid = validateGetVariable($element);
 						break;
 					case 'fw-numeric':
 						valid = validateNumeric($element);
@@ -889,13 +915,26 @@ jQuery(document).ready(function ($) {
 			$(element).removeClass('fw-block-invalid');
 		})
 
-		var formValid = true;
+		let formValid = true;
 		$wizard.find('.fw-wizard-step').each(function (idx, element) {
-			var $step = $(element);
+			const $step = $(element);
 			if (!validateStep($step)) {
 				formValid = false;
 			}
 		});
+
+		if (formValid && useCaptcha) {
+			if (invisibleCaptcha && !checkCaptchaSolved()) {
+				window.grecaptcha.execute(captchaId);
+				return false;
+			}
+
+			if (!checkCaptchaSolved()) {
+				alertUser(msfAjax.i18n.errors.noCaptcha, false);
+				formValid = false;
+			}
+		}
+
 		return formValid;
 	}
 
@@ -905,7 +944,7 @@ jQuery(document).ready(function ($) {
      * @param  {string} rsp the response message
      * @param  {boolean} success successful submit of fail
      */
-	function alertUser(message, success) {
+	function alertUser(message : string, success : boolean) {
 		$('.fw-alert-user').empty().removeClass('fw-alert-user-fail fw-alert-user-success');
 		if (success) {
 			$('.fw-alert-user').addClass('fw-alert-user-success')
@@ -918,34 +957,33 @@ jQuery(document).ready(function ($) {
 			.fadeIn().delay(2000).fadeOut();
 	}
 
-	function submit(evt) {
-		var summary, email, reg;
-		var files = [];
-		var $wizard = $(this).closest('.fw-wizard');
-
+	function submit() {
+		const $wizard = $('.fw-wizard');
+		
 		if (validate($wizard)) {
 			$('.fw-spinner').show();
-			summary = getSummary($wizard);
-			files = getAttachments();
-			email = $wizard.find('[data-id="email"]').first().val();
+			const summary = getSummary($wizard);
+			const firstEmail = $wizard.find('[data-id="email"]').first().val();
+			const files = getAttachments();
+			let reg;
 			if ($wizard.find('[data-type=fw-registration]')) {
 				reg = getRegistration();
 			}
 
-			sendEmail(summary, email, files, reg);
+			sendEmail(summary, firstEmail, files, reg);
 		}
 	}
 
-	function sendEmail(summary, email, files, reg) {
-		var id = $('#multi-step-form').attr('data-wizardid');
-		var token = $('.msf-recaptcha-token').val();
+	function sendEmail(summary, firstEmail, files, reg) {
+		const id = $('#multi-step-form').attr('data-wizardid');
+		const token = useCaptcha ? window.grecaptcha.getResponse(captchaId) : "";
 		$('.fw-btn-submit').html('<i class="fa fa-spinner"></i> ' + msfAjax.i18n.sending);
 		$.post(
 			msfAjax.ajaxurl, {
 				action: 'fw_send_email',
 				id: id,
 				fw_data: summary,
-				email: email,
+				first_email: firstEmail,
 				reg: reg,
 				attachments: files,
 				recaptchaToken: token,
@@ -963,7 +1001,7 @@ jQuery(document).ready(function ($) {
 					}
 				} else {
 					$('.fw-btn-submit').addClass('fw-submit-fail').html('<i class="fa fa-times-circle"></i> ' + msfAjax.i18n.submitError);
-					warn('response', resp);
+					warn('Server Response', resp);
 				}
 			}
 		).fail(function (resp) {
@@ -1164,16 +1202,66 @@ jQuery(document).ready(function ($) {
 		$('.fw-select').on('change', selectOnChange);
 	}
 
-	function setup() {
+	function setupReCaptcha() {
+		const tokenFields = $('.msf-recaptcha-token');
 
-		var $wizard = $('.fw-wizard');
+		if (tokenFields.length > 0) {
+			useCaptcha = true;
+			invisibleCaptcha = tokenFields.data('invisible');
+			const siteKey = tokenFields.data('sitekey');
+			const recaptchaElement = $('.msf-recaptcha-element')[0];
+
+			if (!window.grecaptcha) {
+				useCaptcha = false;
+				warn("ReCaptcha Object not found! This is likely because the ReCaptcha script couldn't be loaded!");
+			}
+
+			window.grecaptcha.ready(function () {
+				let params = {
+					sitekey: siteKey,
+				};
+				if (invisibleCaptcha) {
+					params['callback'] = function(){submit()};
+				}
+				captchaId = window.grecaptcha.render(
+					recaptchaElement, 
+					params
+				);
+			});
+		}
+	}
+
+	function setupGetVariables() {
+		const $wizard = $('.fw-wizard');
+
+		const browserParams = new URLSearchParams(window.location.search);
+
+		$wizard.find('.fw-step-block[data-type="fw-get-variable"]').each(
+			function (_, element) {
+				const $element = $(element);
+				const searchParam = $element.data("param");
+
+				if (browserParams.has(searchParam)) {
+					const param = browserParams.get(searchParam);
+					$element.find('.fw-text-input').val(param);
+				}
+			}
+		);
+	}
+
+	function checkCaptchaSolved() {
+		return window.grecaptcha.getResponse(captchaId).length > 0;
+	}
+
+	function setup() {
+		const $wizard = $('.fw-wizard');
 
 		$wizard.each(function (idx, element) {
 			showStep($(element), 0);
 		});
 
-		var count = getStepCount($wizard);
-		var parentWidth = $wizard.parent().outerWidth();
+		const count = getStepCount($wizard);
+		const parentWidth = $wizard.parent().outerWidth();
 
 		if ((count >= 5 && parentWidth >= 769) ||
 			(parentWidth >= 500)) {
@@ -1181,53 +1269,34 @@ jQuery(document).ready(function ($) {
 		}
 
 		$('.fw-progress-step[data-id="0"]').addClass('fw-active');
-		$('.fw-button-previous').hide(); // prop('disabled', true);
+		$('.fw-button-previous').hide();
 		$('.fw-button-previous').click(previous);
         $('.fw-button-next').click(next);
 
         $('ul.fw-progress-bar li').click(setStep);
 
-		var showSummary = $('.fw-wizard-summary').attr('data-showsummary');
+		const showSummary = $('.fw-wizard-summary').attr('data-showsummary');
 		if (showSummary == 'off') {
 			$('.fw-toggle-summary').remove();
 		}
 
 		setupSelect2();
-
 		setupChangeListeners();
-
 		setupFileUpload();
-
 		setupDatepicker();
-
-		$('.fw-btn-submit').click(submit);
-
 		setupColors();
-
 		setupRegistration();
-
+		setupReCaptcha();
+		setupGetVariables();
+		
+		$('.fw-btn-submit').click(submit);
 		updateSummary($('.fw-wizard'));
 	}
 
-	function validateReCaptcha() {
-		var tokenFields = $('.msf-recaptcha-token');
-
-		if (tokenFields.length > 0) {
-			var siteKey = tokenFields.data('sitekey');
-			window.grecaptcha.ready(function () {
-				window.grecaptcha.execute(siteKey, { action: 'homepage' }).then(function (token) {
-					tokenFields.val(token);
-				});
-			});
-		}
-	}
-
 	function init() {
-		
 		$(document).ready(function (evt) {
 			if ($('#multi-step-form').length) {
 				setup();
-				validateReCaptcha();
 				(window as any).msf = {};
 				(window as any).msf.info = info;
 			}

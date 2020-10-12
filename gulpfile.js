@@ -112,8 +112,8 @@ gulp.task('pot', function pot() {
             domain: 'multi-step-form',
             destfile: 'mondula-form-wizard.pot',
             package: 'Multi Step Form',
-            bugReport: 'http://mondula.com/kontakt', // TODO
-            lastTranslator: 'Lewe Ohlsen <lewe.ohlsen@mondula.com>',
+            bugReport: 'https://mondula.com/en/contact/',
+            lastTranslator: 'Mondula <info@mondula.com>',
             team: 'Mondula GmbH <wp-plugins@mondula.com>'
         }))
         .pipe(gulp.dest('lang'));
@@ -165,7 +165,7 @@ gulp.task('css-backend:production', gulp.series(function cssBackendProd() {
     .pipe(gulp.dest('dist/styles'));
 }));
 
-gulp.task('js-frontend:production', gulp.series( function jsFrontendProd() {
+gulp.task('js-frontend:production', gulp.series(function jsFrontendProd() {
   return gulp.src(['assets/js/frontend/*.ts'])
     .pipe(ts({outFile: 'msf-frontend.min.js'}))
     .pipe(stripDebug())
@@ -216,8 +216,15 @@ gulp.task('copy:zip', gulp.series('clean:zip', 'build:production', function copy
     .pipe(gulp.dest('pkg/multi-step-form-jbr'));
 }));
 
-gulp.task('zip', gulp.series('copy:zip', function zipPackage() {
-  return gulp.src('pkg/**/multi-step-form-jbr/**')
+gulp.task('copy:lang', gulp.series('copy:zip', function copyLang() {
+  return gulp.src(
+    'pkg/multi-step-form-jbr/lang/multi-step-form-jbr.pot')
+    .pipe(rename('mondula-form-wizard.pot'))
+    .pipe(gulp.dest('pkg/multi-step-form-jbr/lang/'));
+}));
+
+gulp.task('zip', gulp.series('copy:lang', function zipPackage() {
+  return gulp.src('pkg/multi-step-form-jbr/**')
     .pipe(zip('multi-step-form-jbr.zip'))
     .pipe(gulp.dest('pkg'));
 }));

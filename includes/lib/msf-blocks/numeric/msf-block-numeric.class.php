@@ -1,11 +1,9 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if (!defined('ABSPATH')) exit;
 
 /**
  * Representation of a numeric input field.
- *
- * @author nico, marten
  */
 class Mondula_Form_Wizard_Block_Numeric extends Mondula_Form_Wizard_Block {
 
@@ -30,15 +28,7 @@ class Mondula_Form_Wizard_Block_Numeric extends Mondula_Form_Wizard_Block {
 		$this->_maximum = $maximum;
 	}
 
-	/**
-	 * Returns the '_required'-Status of the Object.
-	 * @return boolean $_required If true, Input for this field is required.
-	 */
-	public function get_required() {
-	  return $this->_required;
-	}
-
-	public function render( $ids ) {
+	public function render($ids) {
 		$minimumDefined = strlen($this->_minimum) > 0;
 		$maximumDefined = strlen($this->_maximum) > 0;
 	?>

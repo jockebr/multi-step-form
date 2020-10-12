@@ -1,6 +1,6 @@
 <?php
 
-if ( ! defined( 'ABSPATH' ) ) exit;
+if (!defined('ABSPATH')) exit;
 
 /**
  * Representation of a file upload field.
@@ -21,28 +21,21 @@ class Mondula_Form_Wizard_Block_File extends Mondula_Form_Wizard_Block {
 	 * @param boolean $required If true, Input for this field is required.
 	 * @param boolean $multi If true, multiple files can be uploaded.
 	 */
-	public function __construct ( $label, $required, $multi ) {
+	public function __construct ($label, $required, $multi) {
 		$this->_label = $label;
 		$this->_required = $required;
 		$this->_multi = $multi;
 	}
 
-	/**
-	 * Returns the '_required'-Status of the Object.
-	 * @return boolean $_required If true, Input for this field is required.
-	 */
-	public function get_required( ) {
-	  return $this->_required;
-	}
-
-	public function render( $ids ) {
-	  $group = $this->generate_id( $ids );
+	public function render($ids) {
+	  $group = $this->generate_id($ids);
 	  ?>
 		<div class="fw-step-block" data-blockId="<?php echo $ids[0]; ?>" data-type="fw-file" data-required="<?php echo $this->_required; ?>">
 			<div class="fw-input-container">
 				<h3><?php echo $this->_label ?></h3>
 				<input type="file" name="<?php echo $group; ?>" id="<?php echo $group ?>" class="fw-file-upload-input" <?php echo $this->_multi === 'true' ? 'multiple' : ''; ?>>
 				<label class="fw-btn fw-button-fileupload" for="<?php echo $group ?>"><i class="fa fa-upload fw-file-upload-status" aria-hidden="true"></i><span><?php _e('Choose a file', 'multi-step-form') ?></span></label>
+				<p><?php printf(__('Max. size: %s', 'multi-step-form'), size_format(wp_max_upload_size(), 1)); ?></p>
 			</div>
 			<div class="fw-clearfix"></div>
 		</div>
@@ -58,11 +51,11 @@ class Mondula_Form_Wizard_Block_File extends Mondula_Form_Wizard_Block {
 		);
 	}
 
-	public static function from_aa( $aa , $current_version, $serialized_version ) {
+	public static function from_aa($aa , $current_version, $serialized_version) {
 		$label = $aa['label'];
 		$required = $aa['required'];
-		$multi = isset( $aa['multi'] ) ? $aa['multi'] : false;
-		return new Mondula_Form_Wizard_Block_File( $label, $required, $multi );
+		$multi = isset($aa['multi']) ? $aa['multi'] : false;
+		return new Mondula_Form_Wizard_Block_File($label, $required, $multi);
 	}
 
 	public static function addType($types) {
